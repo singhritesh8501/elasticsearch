@@ -1,0 +1,70 @@
+---
+- name: install all the updates
+  apt:
+    upgrade: yes
+    update_cache: yes
+    force_apt_get: yes
+
+- name: install java
+  apt:
+    name: "{{ java_package }}"
+    state: present
+
+- name: download the .deb package
+  get_url:
+    url: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.3.2.deb
+    dest: "{{ item1 }}"
+
+- name: Install a .deb package
+  apt:
+    deb: "{{ item2 }}"
+  
+- name: update the content of elasticsearch.yml
+  lineinfile:
+    path: "{{ elasticsearch_conf_file }}"
+    regexp: 'network.host'
+    line: 'network.host: [_local_, _site_]'
+
+- name: update the name of the cluster
+  lineinfile:
+    path: "{{ elasticsearch_conf_file }}"
+    regexp: 'cluster.name'
+    line: 'cluster.name: Prod-Cluster'
+
+- name: update the name of the node
+  lineinfile:
+    path: "{{ elasticsearch_conf_file }}"
+    regexp: 'node.name'
+    line: |
+          node.name: {{ansible_hostname}}
+          node.master: false
+          node.data: true
+
+- name: update the master node
+  lineinfile:
+    path: "{{ elasticsearch_conf_file }}"
+    regexp: 'node.master'
+    line: 'node.master: true'
+  when: ansible_default_ipv4.address == groups['nodes'][0]
+
+- debug: 
+    msg: "{{ ansible_default_ipv4.address }}" 
+
+- name: update the data node 
+  lineinfile:
+    path: "{{ elasticsearch_conf_file }}"
+    regexp: 'node.data'
+    line: 'node.data: false'
+  when: ansible_default_ipv4.address == groups['nodes'][0]
+
+- name: update discovery.zen.ping.unicast.hosts list
+  lineinfile: 
+    path:  "{{ elasticsearch_conf_file }}"    
+    regexp: 'discovery.zen.ping.unicast.hosts'
+    line : 'discovery.zen.ping.unicast.hosts: {{ ansible_play_hosts_all | to_json }}'
+
+- name: start elasticsearch service
+  service:
+    name: "{{ elasticsearch_package }}"
+    state: started
+    enabled: true

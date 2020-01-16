@@ -1,0 +1,7 @@
+---
+# vars file for elasticsearch
+java_package: openjdk-8-jdk
+item1: /opt
+item2: /opt/elasticsearch-6.3.2.deb
+elasticsearch_conf_file: /etc/elasticsearch/elasticsearch.yml
+elasticsearch_package: elasticsearch

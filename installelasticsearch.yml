@@ -1,0 +1,7 @@
+---
+#- name: Install ElasticSearch
+- hosts: nodes
+  become: yes
+  become_user: root 
+  roles:
+  - elasticsearch
